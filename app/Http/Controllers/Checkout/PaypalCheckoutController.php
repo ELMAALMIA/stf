@@ -19,7 +19,7 @@ class PaypalCheckoutController extends CheckoutController
     public function __construct()
     {
         parent::__construct();
-        
+
         // set_error_handler('checkoutErrorHandler');
     }
 
@@ -28,31 +28,32 @@ class PaypalCheckoutController extends CheckoutController
      */
     public function store()
     {
-        try {
-            if (! isset($_COOKIE['checkout_details'])) {
-                return $this->handlerErrorForFrontEnd('Provided data was expired! You need to enter your data again.', route('checkout.detailsIndex'));
-            }
-            
-            $this->checkRaceCondition();
+        // try {
+        //     if (! isset($_COOKIE['checkout_details'])) {
+        //         return $this->handlerErrorForFrontEnd('Provided data was expired! You need to enter your data again.', route('checkout.detailsIndex'));
+        //     }
 
-            $this->addToOrderDetails(json_decode($_COOKIE['checkout_details'], true));
+        //     $this->checkRaceCondition();
 
-            $response = $this->connectToPayPal();
-            
-            if ($this->debug)
-            {
-                echo json_encode($response->result, JSON_PRETTY_PRINT);
-            }
+        //     $this->addToOrderDetails(json_decode($_COOKIE['checkout_details'], true));
 
-            // Return a successful response to the client.
-            return json_encode($response->result);
-        } catch (\Exception $e) {
-            return $this->handlerErrorForFrontEnd(
-                // CHECKOUT_ERROR['userMessage'] ?? self::DEFAULT_ERROR_MESSAGE, 
-                self::DEFAULT_ERROR_MESSAGE, 
-                route('checkout.completeIndex')
-            );
-        }
+        //     $response = $this->connectToPayPal();
+
+        //     if ($this->debug)
+        //     {
+        //         echo json_encode($response->result, JSON_PRETTY_PRINT);
+        //     }
+
+        //     // Return a successful response to the client.
+        //     return json_encode($response->result);
+        // } catch (\Exception $e) {
+        //     return $this->handlerErrorForFrontEnd(
+        //         // CHECKOUT_ERROR['userMessage'] ?? self::DEFAULT_ERROR_MESSAGE, 
+        //         self::DEFAULT_ERROR_MESSAGE, 
+        //         route('checkout.completeIndex')
+        //     );
+        // }
+        return back()->with('success-message', 'Merci pour votre message on va essayer de vous contacter !!');
     }
 
     /**
@@ -61,15 +62,15 @@ class PaypalCheckoutController extends CheckoutController
     public function captureOrder(Request $request)
     {
         try {
-            if (! isset($_COOKIE['checkout_details'])) {
+            if (!isset($_COOKIE['checkout_details'])) {
                 return $this->handlerErrorForFrontEnd(
-                    'Provided data was expired! You need to enter your data again.', 
+                    'Provided data was expired! You need to enter your data again.',
                     route('checkout.detailsIndex')
                 );
             }
 
             $request = new OrdersCaptureRequest($request->orderID);
-            
+
             // Call PayPal to capture an authorization
             $client = PayPalClient::client();
             $response = $client->execute($request);
@@ -82,7 +83,7 @@ class PaypalCheckoutController extends CheckoutController
 
             // Get checkout details from cookies and combine it with $orderDetails property
             $this->addToOrderDetails(json_decode($_COOKIE['checkout_details'], true), $userInfo);
-            
+
             DB::transaction(function () {
                 // Save the transaction to the database.
                 $order = $this->addToOrderTables();
@@ -94,7 +95,7 @@ class PaypalCheckoutController extends CheckoutController
         } catch (\Exception $e) {
             return $this->handlerErrorForFrontEnd(
                 // CHECKOUT_ERROR['userMessage'] ?? self::DEFAULT_ERROR_MESSAGE, 
-                self::DEFAULT_ERROR_MESSAGE, 
+                self::DEFAULT_ERROR_MESSAGE,
                 route('checkout.completeIndex')
             );
         }
@@ -121,33 +122,33 @@ class PaypalCheckoutController extends CheckoutController
         return array(
             'intent' => 'CAPTURE',
             'application_context' =>
-                array(
-                    'return_url' => route('thankyou'),
-                    'cancel_url' => route('checkout.completeIndex'),
-                ),
+            array(
+                'return_url' => route('thankyou'),
+                'cancel_url' => route('checkout.completeIndex'),
+            ),
             'purchase_units' =>
+            array(
+                0 =>
                 array(
-                    0 =>
+                    'amount' =>
+                    array(
+                        'currency_code' => 'USD',
+                        'value' => convertCurrency(getNumbers()->get('total')),
+                    ),
+                    'shipping' =>
+                    array(
+                        'address' =>
                         array(
-                            'amount' =>
-                                array(
-                                    'currency_code' => 'USD',
-                                    'value' => convertCurrency(getNumbers()->get('total')),
-                                ),
-                            'shipping' =>
-                                array(
-                                  'address' =>
-                                    array(
-                                      'address_line_1' => $this->orderDetails->address_shipping,
-                                      'address_line_2' => '',
-                                      'admin_area_2' => $this->orderDetails->state_shipping,
-                                      'admin_area_1' => $this->orderDetails->city_shipping,
-                                      'postal_code' => $this->orderDetails->postal_code_shipping,
-                                      'country_code' => substr($country_code, 0, 2),
-                                    ),
-                                ),
-                        )
+                            'address_line_1' => $this->orderDetails->address_shipping,
+                            'address_line_2' => '',
+                            'admin_area_2' => $this->orderDetails->state_shipping,
+                            'admin_area_1' => $this->orderDetails->city_shipping,
+                            'postal_code' => $this->orderDetails->postal_code_shipping,
+                            'country_code' => substr($country_code, 0, 2),
+                        ),
+                    ),
                 )
+            )
         );
     }
 
@@ -156,7 +157,7 @@ class PaypalCheckoutController extends CheckoutController
         session()->flash('error-msg', $msg);
 
         return json_encode([
-            'error' => true, 
+            'error' => true,
             'redirect_url' => $route,
         ]);
     }

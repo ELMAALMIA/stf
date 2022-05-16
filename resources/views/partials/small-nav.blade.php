@@ -1,10 +1,10 @@
 <div class="container small-devices-navbar">
     <div class="top-nav">
         @if (request()->is('checkout') || request()->is('checkout/complete'))
-            <div class="logo logo-checkout"><a href="/">Ecommerce</a></div>
+        <div class="logo logo-checkout"><a href="/"> <em> Vshop</em>e</a></div>
         @else
-            <div class="logo"><a href="/">Ecommerce</a></div>
-        @endif      
+        <div class="logo"><a href="/"> <em> Vshop</em></a></div>
+        @endif
 
         <span class="navbar-toggler-container">
             <span></span>

@@ -1,6 +1,6 @@
 <footer>
     <div class="footer-content container">
-        <div class="made-with">Made by Abdelrahman</div>
+        <div class="made-with">© Copyright El M</div>
 
         {{-- Footer menu --}}
         {{ menu('footer', 'partials.menus.footer') }}

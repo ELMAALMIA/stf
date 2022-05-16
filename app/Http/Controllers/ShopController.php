@@ -19,19 +19,19 @@ class ShopController extends Controller
     public function index()
     {
         $categories = Category::all();
-            
+
         if (request()->category) {
             $targetCategory = Category::where('slug', request()->category)->firstOrFail();
             $products = $targetCategory->products()->available();
             $categoryName = $targetCategory->name;
         } else {
             $products = Product::available()->Where('featured', TRUE);
-            $categoryName = 'Featured';
+            $categoryName = 'Nouveauté';
         }
 
         if (request()->has('minPrice') && request()->has('maxPrice')) {
             $products->where('price', '>=', request()->minPrice)
-                     ->where('price', '<=', request()->maxPrice);
+                ->where('price', '<=', request()->maxPrice);
         }
 
         if (request()->sort == 'high_low') {
@@ -68,7 +68,7 @@ class ShopController extends Controller
         request()->validate([
             'query' => 'required|min:3'
         ]);
-        
+
         $products = Product::search($request->input('query'))->where('quantity', '>', 0)->paginate(4);
 
         return view('search-results', compact('products'));

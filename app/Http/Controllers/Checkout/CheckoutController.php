@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cookie;
 use Gloudemans\Shoppingcart\Facades\Cart;
+use LDAP\Result;
 
 class CheckoutController extends Controller
 {
@@ -39,23 +40,76 @@ class CheckoutController extends Controller
                 'postal_code_shipping' => $request->postal_code
             ]);
         }
-        
+
         $request->validate($this->detailsRules(), $this->messages());
 
-        setcookie('checkout_details', json_encode($request->except('_token'), true), time()+600, '/');
+        setcookie('checkout_details', json_encode($request->except('_token'), true), time() + 600, '/');
 
         return redirect(route('checkout.completeIndex'));
     }
 
+
     public function completeIndex()
     {
-        if (! isset($_COOKIE['checkout_details'])) {
+        if (!isset($_COOKIE['checkout_details'])) {
             return redirect(route('checkout.detailsIndex'));
         }
 
         return $this->handleView('checkout.complete');
     }
 
+    public function store(Request $request)
+
+    {
+        $order = Order::create([
+            'user_id' => auth()->user() ? auth()->id() : null,
+            'billing_email' => $request->email,
+            'billing_phone' => $request->phone_number,
+            'billing_address' => $request->billing_address,
+            'billing_country' => $request->country,
+            'billing_city' => $request->city,
+            'billing_state' => $request->state,
+            'billing_postal_code' => $request->postal_code,
+            'shipping_address' => $request->address_shipping ?? $request->billing_address,
+            'shipping_country' => $request->country_shipping ?? $request->country,
+            'shipping_city' => $request->city_shipping ?? $request->city,
+            'shipping_state' => $request->state_shipping ?? $request->state,
+            'shipping_postal_code' => $request->postal_code_shipping ??  $request->postal_code,
+            // 'cc_first_name' => $this->orderDetails->cc_first_name,
+            // 'cc_last_name' => $this->orderDetails->cc_last_name,
+            'cc_phone' => $request->cc_phone_number ?? null,
+            // 'subtotal' => getNumbers()->get('subtotal'),
+            // 'tax' => getNumbers()->get('tax'),
+            // 'discount' => getNumbers()->get('discount'),
+            // 'discount_code' => getNumbers()->get('discountCode'),
+            'total' => getNumbers()->get('total'),
+            // 'payment_gateway' => static::PAYMENT_METHOD,
+            // 'transaction_id' => $this->orderDetails->transaction_id ?? null,
+            // 'card_brand' => $this->orderDetails->card_brand ?? null,
+            // 'card_first_six_digits' => $this->orderDetails->card_first_six_digits ?? null,
+            // 'card_last_four_digits' => $this->orderDetails->card_last_four_digits ?? null,
+            'error' => null,
+        ]);
+        $order->save();
+
+
+        foreach (Cart::content() as $item) {
+            $pr = new OrderProduct([
+                'order_id' => $order->id,
+                'product_id' => $item->model->id,
+                'quantity' => $item->qty
+            ]);
+            $pr->save();
+        }
+        // / Get cart & wishlist from cookie back to session
+        $this->getFromCookieToSession('wishlist');
+        $this->getFromCookieToSession('cart');
+
+        deleteCookie('wishlist');
+        deleteCookie('cart');
+
+        return redirect(route('thankyou'));
+    }
     protected function handleView($route)
     {
         if (Cart::content()->isEmpty()) {
@@ -97,7 +151,7 @@ class CheckoutController extends Controller
         }
 
         // We use it so we can skip updating the searchable product which requires using meilisearch master key
-        setcookie('dontUpdateSearchable', 'dontUpdateSearchable', time()+600, '/');
+        setcookie('dontUpdateSearchable', 'dontUpdateSearchable', time() + 600, '/');
     }
 
     protected function detailsRules()
@@ -123,7 +177,7 @@ class CheckoutController extends Controller
     protected function messages()
     {
         return [
-            'email.unique' => 'You already have an account with this email address. Please <a href="'.route('login').'">login</a> to continue.'
+            'email.unique' => 'You already have an account with this email address. Please <a href="' . route('login') . '">login</a> to continue.'
         ];
     }
 
@@ -144,7 +198,7 @@ class CheckoutController extends Controller
             'shipping_state' => $this->orderDetails->state_shipping,
             'shipping_postal_code' => $this->orderDetails->postal_code_shipping,
             'cc_first_name' => $this->orderDetails->cc_first_name,
-            'cc_last_name' => $this->orderDetails->cc_last_name,  
+            'cc_last_name' => $this->orderDetails->cc_last_name,
             'cc_phone' => $this->orderDetails->cc_phone_number ?? null,
             'subtotal' => getNumbers()->get('subtotal'),
             'tax' => getNumbers()->get('tax'),
@@ -200,6 +254,16 @@ class CheckoutController extends Controller
 
         if (session()->has('coupon')) {
             session()->forget('coupon');
+        }
+    }
+    protected function getFromCookieToSession($index)
+    {
+        if (!empty($items = $_COOKIE[$index] ?? null)) {
+            foreach (json_decode($items) as $itemId => $item) {
+                Cart::instance($index == 'wishlist' ? 'wishlist' : 'default')
+                    ->add($item->id, $item->name, $item->qty, $item->price)
+                    ->associate('App\Product');
+            }
         }
     }
 }

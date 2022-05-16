@@ -17,7 +17,7 @@ class CartController extends Controller
     public function index()
     {
         $mightAlsoLike = Product::mightAlsoLike()->get();
-        
+
         return view('cart', [
             'mightAlsoLike' => $mightAlsoLike,
             'subtotal' => getNumbers()->get('subtotal'),
@@ -72,7 +72,7 @@ class CartController extends Controller
     public function update(Request $request, Product $product)
     {
         $request->validate([
-            'quantity' => 'required|integer|between:1,' .$product->quantity
+            'quantity' => 'required|integer|between:1,' . $product->quantity
         ]);
 
         Cart::instance('default')->update($request->row_id, $request->quantity);
@@ -90,6 +90,6 @@ class CartController extends Controller
     {
         Cart::remove($rowId);
 
-        return back()->with('success-message', 'Item was removed from Cart successfully!');
+        return back()->with('success-message', 'produit surprimer avec succes§$!!');
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use TCG\Voyager\Facades\Voyager;
 
 // Home
 Route::get('/home', 'HomeController@index');
@@ -24,6 +26,7 @@ Route::resource('wishlist', 'WishlistController')->only(['index', 'store', 'dest
 Route::get('checkout', 'Checkout\CheckoutController@detailsIndex')->name('checkout.detailsIndex');
 Route::post('checkout/validateDetails', 'Checkout\CheckoutController@validateDetails')->name('checkout.validateDetails');
 Route::get('checkout/complete', 'Checkout\CheckoutController@completeIndex')->name('checkout.completeIndex');
+Route::post('checkout/validaterDetails', 'Checkout\CheckoutController@store')->name('storer');
 Route::post('checkout', 'Checkout\CreditCardCheckoutController@store')->name('checkout.store');
 Route::post('checkout/verify', 'Checkout\CreditCardCheckoutController@verify')->name('checkout.verify');
 // Paypal
@@ -37,25 +40,25 @@ Route::name('loginToCheckout')->get('loginToCheckout', 'Auth\LoginController@log
 Route::post('coupon', 'CouponController@store')->name('coupon.store');
 Route::delete('coupon', 'CouponController@destroy')->name('coupon.destroy');
 
-Route::get('thankyou', function() {
-    // Delete "user_id" cookie
-    setcookie('user_id', '', time()-3600);
+Route::get('thankyou', function () {
+	// Delete "user_id" cookie
+	setcookie('user_id', '', time() - 3600);
 
 	// Delete "cart" cookie
-    setcookie('cart', '', time()-60);
+	setcookie('cart', '', time() - 60);
 
 	return view('thankyou');
 })->name('thankyou');
 
-Route::middleware('auth')->group(function() {
+Route::middleware('auth')->group(function () {
 	Route::get('profile', 'UsersController@edit')->name('profile.edit');
 	Route::put('profile', 'UsersController@update')->name('profile.update');
-	
+
 	Route::resource('orders', 'OrdersController')->only(['index', 'show']);
 });
 
-Route::group(['prefix' => 'admin'], function() {
-    Voyager::routes();
+Route::group(['prefix' => 'admin'], function () {
+	Voyager::routes();
 });
 
 Auth::routes();

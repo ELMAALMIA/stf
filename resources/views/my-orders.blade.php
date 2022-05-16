@@ -7,74 +7,75 @@
 
 @section('content')
 
-    <div class="breadcrumbs">
-        <div class="container">
-            <div>
-                <a href="/">Home</a>
-                <i class="fa fa-chevron-right breadcrumb-separator"></i>
-                <span class="visited">My Orders</span>
-            </div>
-            
-            @include('partials.search-form')
+<div class="breadcrumbs">
+    <div class="container">
+        <div>
+            <a href="/">Page d'acceuil</a>
+            <i class="fa fa-chevron-right breadcrumb-separator"></i>
+            <span class="visited">Mes commandes</span>
         </div>
-    </div> <!-- end breadcrumbs -->
 
-    <div class="products-section container profile-section">
-        @include('partials.profile-sidebar')
+        @include('partials.search-form')
+    </div>
+</div> <!-- end breadcrumbs -->
 
-        <div class="products-section-all">
-            <h1 class="stylish-heading">My Orders</h1>
+<div class="products-section container profile-section">
+    @include('partials.profile-sidebar')
 
-            @foreach ($orders as $order)
-                <table class="orders-table">
-                    <thead>
-                        <tr class="head-tr">
-                            <th class="first-th">
-                                <div>
-                                    <h4>Order Placed</h4>
-                                    <div>{{ $order->created_at->toFormattedDateString() }}</div>
-                                </div>
+    <div class="products-section-all">
+        <h1 class="stylish-heading">Mes Commandes</h1>
 
-                                <div>
-                                    <h4>Order ID</h4>
-                                    <div>{{ $order->id }}</div>
-                                </div>
+        @foreach ($orders as $order)
+        <table class="orders-table">
+            <thead>
+                <tr class="head-tr">
+                    <th class="first-th">
+                        <div>
+                            <h4>
+                                Commande passée</h4>
+                            <div>{{ $order->created_at->toFormattedDateString() }}</div>
+                        </div>
 
-                                <div>
-                                    <h4>Total</h4>
-                                    <div>{{ presentPrice($order->total) }}</div>
-                                </div>
-                            </th>
+                        <div>
+                            <h4>Commande ID</h4>
+                            <div>{{ $order->id }}</div>
+                        </div>
 
-                            <th class="last-th">
-                                <a href="{{ route('orders.show', $order->id) }}">Order Details</a>
-                                <a href="">Invoice</a>
-                            </th>
-                        </tr>
-                    </thead>
+                        <div>
+                            <h4>Prix Totale</h4>
+                            <div>{{ presentPrice($order->total) }}</div>
+                        </div>
+                    </th>
 
-                    <tbody class="products-box">
-                        <tr class="order-products">
-                            @foreach ($order->products as $product)
-                                <td class="product-details">
-                                    <img src="{{ $product->imgPath() }}" alt="{{ $product->name }}">
+                    <th class="last-th">
+                        <a href="{{ route('orders.show', $order->id) }}">Commandes Details</a>
+                        <a href="">Invoice</a>
+                    </th>
+                </tr>
+            </thead>
 
-                                    <div>
-                                        <div><a class="product-name" href="{{ route('shop.show', $product) }}">{{ $product->name }}</a></div>
-                                        <div class="product-price">{{ $product->presentPrice() }}</div>
-                                        <div>Quantity:  {{ $product->pivot->quantity }}</div>
-                                    </div>
-                                </td>
-                            @endforeach
-                        </tr>
-                    </tbody>
-                </table> <!-- end table -->
-            @endforeach
-        </div>
-    </div> <!-- end product-section -->
+            <tbody class="products-box">
+                <tr class="order-products">
+                    @foreach ($order->products as $product)
+                    <td class="product-details">
+                        <img src="{{ $product->imgPath() }}" alt="{{ $product->name }}">
+
+                        <div>
+                            <div><a class="product-name" href="{{ route('shop.show', $product) }}">{{ $product->name
+                                    }}</a></div>
+                            <div class="product-price">{{ $product->presentPrice() }}</div>
+                            <div>Quantité: {{ $product->pivot->quantity }}</div>
+                        </div>
+                    </td>
+                    @endforeach
+                </tr>
+            </tbody>
+        </table> <!-- end table -->
+        @endforeach
+    </div>
+</div> <!-- end product-section -->
 
 @endsection
 
 @section('extra-js')
 @endsection
-

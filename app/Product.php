@@ -64,7 +64,7 @@ class Product extends Model
 
     public function scopeMightAlsoLike($query)
     {
-    	return $query->inRandomOrder()->take(4);
+        return $query->inRandomOrder()->take(4);
     }
 
     public function scopeAvailable($query)
@@ -75,21 +75,21 @@ class Product extends Model
     public function presentPrice($price = null)
     {
         // If price is not comming from cart (subtotal)
-        if (! $price) {   
-        	$price = number_format($this->price, 2, '.', ',');
+        if (!$price) {
+            $price = number_format($this->price, 2, '.', ',');
         }
 
-        return $price . ' EGP';
+        return $price . ' MAD';
     }
 
-    public function imgPath() 
+    public function imgPath()
     {
         return asset('images/' . $this->main_image);
     }
 
     public function getCartRowId($instance)
     {
-        $itemCollection = Cart::instance($instance)->search(function($cartItem, $rowId) {
+        $itemCollection = Cart::instance($instance)->search(function ($cartItem, $rowId) {
             return $cartItem->id == $this->id;
         });
 
@@ -118,7 +118,7 @@ class Product extends Model
 
     protected function checkCartDuplicates($instance = 'default')
     {
-        $duplicates = Cart::instance($instance)->search(function($cartItem, $rowId) {
+        $duplicates = Cart::instance($instance)->search(function ($cartItem, $rowId) {
             return $cartItem->id == $this->id;
         });
 
